@@ -662,7 +662,6 @@ app.listen(PORT, async () => {
     console.log(`\n[${new Date().toISOString()}] 🔧 FIXED: PayPal Order ID Management:`);
     console.log(`[${new Date().toISOString()}] ✅ REMOVED: All generateOrderId() and ourOrderId references`);
     console.log(`[${new Date().toISOString()}] ✅ FIXED: Uses only PayPal's Order ID throughout`);
-    console.log(`[${new Date().toISOString()}] ✅ FIXED: order_id from callbacks used as reference_id`);
     console.log(`[${new Date().toISOString()}] ✅ FIXED: CSV storage uses PayPal Order ID as primary key`);
     console.log(`[${new Date().toISOString()}] ✅ FIXED: No custom ID generation anywhere in flow`);
 
