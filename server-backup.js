@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto'); // For fallback ID generation
 require('dotenv').config();
 
 const app = express();
@@ -19,10 +18,10 @@ const PAYPAL_CONFIG = {
 
 // Multi-Currency Configuration
 const CURRENCY_CONFIG = {
-    'HK': {
-        code: 'HKD',
-        symbol: 'HK$',
-        rate: 7.8,
+    'HK': { 
+        code: 'HKD', 
+        symbol: 'HK$', 
+        rate: 7.8, 
         name: 'Hong Kong Dollar',
         shipping: {
             free: true,
@@ -30,10 +29,10 @@ const CURRENCY_CONFIG = {
             express: { cost: 0, days: '1-2', type: 'FREE_EXPRESS' }
         }
     },
-    'US': {
-        code: 'USD',
-        symbol: '$',
-        rate: 1.0,
+    'US': { 
+        code: 'USD', 
+        symbol: '$', 
+        rate: 1.0, 
         name: 'US Dollar',
         shipping: {
             free: false,
@@ -41,10 +40,10 @@ const CURRENCY_CONFIG = {
             express: { cost: 19.99, days: '2-3', type: 'EXPRESS' }
         }
     },
-    'GB': {
-        code: 'GBP',
-        symbol: '£',
-        rate: 0.79,
+    'GB': { 
+        code: 'GBP', 
+        symbol: '£', 
+        rate: 0.79, 
         name: 'British Pound',
         shipping: {
             free: false,
@@ -63,9 +62,6 @@ app.use(express.static(path.join(__dirname)));
 let accessToken = null;
 let tokenExpiry = null;
 
-// FIXED: In-memory order mapping to track PayPal Order IDs to our internal references
-const orderMappings = new Map(); // PayPal Order ID -> { ourOrderId, createdAt, items, etc. }
-
 async function generateAccessToken() {
     try {
         if (accessToken && tokenExpiry && Date.now() < tokenExpiry) {
@@ -73,6 +69,7 @@ async function generateAccessToken() {
         }
 
         const auth = Buffer.from(`${PAYPAL_CONFIG.CLIENT_ID}:${PAYPAL_CONFIG.CLIENT_SECRET}`).toString('base64');
+
         const response = await fetch(`${PAYPAL_CONFIG.BASE_URL}/v1/oauth2/token`, {
             method: 'POST',
             headers: {
@@ -93,6 +90,7 @@ async function generateAccessToken() {
 
         console.log(`[${new Date().toISOString()}] ✅ PayPal Access Token Generated`);
         return accessToken;
+
     } catch (error) {
         console.error(`[${new Date().toISOString()}] ❌ Error generating PayPal access token:`, error);
         throw error;
@@ -153,9 +151,9 @@ function calculateShippingOptions(shipping_address, order_details = {}) {
     const currencyInfo = getCurrencyInfo(countryCode);
     const orderTotal = parseFloat(order_details.total || 0);
 
-    console.log(`[${new Date().toISOString()}] 📍 Country: ${countryCode}`);
-    console.log(`[${new Date().toISOString()}] 💰 Order Total: ${currencyInfo.symbol}${orderTotal}`);
-    console.log(`[${new Date().toISOString()}] 💱 Currency: ${currencyInfo.code}`);
+    console.log(`[${new Date().toISOString()}]    📍 Country: ${countryCode}`);
+    console.log(`[${new Date().toISOString()}]    💰 Order Total: ${currencyInfo.symbol}${orderTotal}`);
+    console.log(`[${new Date().toISOString()}]    💱 Currency: ${currencyInfo.code}`);
 
     let shippingOptions = [];
 
@@ -182,14 +180,15 @@ function calculateShippingOptions(shipping_address, order_details = {}) {
                 }
             }
         ];
-    } else {
+    } 
+    else {
         const standardCost = currencyInfo.shipping.standard.cost;
         const expressCost = currencyInfo.shipping.express.cost;
         const freeShippingThreshold = 300 * currencyInfo.rate;
         const qualifiesForFreeShipping = orderTotal >= freeShippingThreshold;
 
         if (qualifiesForFreeShipping) {
-            console.log(`[${new Date().toISOString()}] ✅ Qualifies for free shipping`);
+            console.log(`[${new Date().toISOString()}]    ✅ Qualifies for free shipping`);
             shippingOptions = [
                 {
                     id: 'FREE_STANDARD_QUALIFIED',
@@ -238,7 +237,7 @@ function calculateShippingOptions(shipping_address, order_details = {}) {
         }
     }
 
-    console.log(`[${new Date().toISOString()}] 📦 Generated ${shippingOptions.length} shipping options`);
+    console.log(`[${new Date().toISOString()}]    📦 Generated ${shippingOptions.length} shipping options`);
     return shippingOptions;
 }
 
@@ -267,34 +266,31 @@ function validateShippingAddress(shipping_address) {
 
 // API Routes
 app.get('/api/health', (req, res) => {
-    res.json({
-        status: 'OK',
+    res.json({ 
+        status: 'OK', 
         timestamp: new Date().toISOString(),
         environment: PAYPAL_CONFIG.BASE_URL.includes('sandbox') ? 'sandbox' : 'production',
         callbackBaseUrl: PAYPAL_CONFIG.CALLBACK_BASE_URL,
         responseFormat: 'PayPal Order Structure Format (per shipping module docs)',
-        orderMappings: orderMappings.size,
         features: [
             'PayPal Orders v2 API',
             'PayPal Shipping Module Response Format',
             'Server-side Shipping Callbacks',
             'Multi-currency Support (HKD, USD, GBP)',
-            'Dynamic Shipping Cost Calculation',
-            'FIXED: PayPal Order ID Management'
+            'Dynamic Shipping Cost Calculation'
         ]
     });
 });
 
-// FIXED: Create PayPal Order with proper Order ID tracking
+// Create PayPal Order
 app.post('/api/paypal/create-order', async (req, res) => {
     try {
         console.log(`[${new Date().toISOString()}] 📦 Creating PayPal order...`);
-        
+
         const token = await generateAccessToken();
         const orderData = req.body;
-        
-        // Generate our internal order ID for tracking
         const ourOrderId = generateOrderId();
+
         const currencyCode = orderData.purchase_units[0].amount.currency_code || 'USD';
         const countryCode = orderData.purchase_units[0].shipping?.address?.country_code || 'US';
 
@@ -302,8 +298,8 @@ app.post('/api/paypal/create-order', async (req, res) => {
             ...orderData,
             purchase_units: orderData.purchase_units.map(unit => ({
                 ...unit,
-                reference_id: ourOrderId,  // Our internal ID for reference
-                custom_id: ourOrderId,     // Backup reference
+                reference_id: ourOrderId,
+                custom_id: ourOrderId,
                 soft_descriptor: 'ACTIONFIGURE'
             }))
         };
@@ -317,6 +313,7 @@ app.post('/api/paypal/create-order', async (req, res) => {
         }
 
         const callbackUrl = `${PAYPAL_CONFIG.CALLBACK_BASE_URL}/api/paypal/shipping-callback`;
+
         enhancedOrderData.payment_source.paypal.experience_context = {
             ...enhancedOrderData.payment_source?.paypal?.experience_context,
             shipping_preference: 'GET_FROM_FILE',
@@ -348,36 +345,25 @@ app.post('/api/paypal/create-order', async (req, res) => {
         }
 
         const order = await response.json();
-        const paypalOrderId = order.id; // This is PayPal's actual Order ID
-
-        // FIXED: Store mapping between PayPal Order ID and our internal data
-        orderMappings.set(paypalOrderId, {
-            ourOrderId: ourOrderId,
-            createdAt: new Date().toISOString(),
-            currency: currencyCode,
-            country: countryCode,
-            originalOrderData: orderData
-        });
-
-        console.log(`[${new Date().toISOString()}] ✅ PayPal order created: ${paypalOrderId}`);
-        console.log(`[${new Date().toISOString()}] 📋 Stored mapping: ${paypalOrderId} -> ${ourOrderId}`);
+        console.log(`[${new Date().toISOString()}] ✅ PayPal order created:`, order.id);
 
         res.json({
-            id: paypalOrderId,        // Return PayPal's Order ID
+            id: order.id,
             status: order.status,
-            orderID: ourOrderId,      // Also return our internal ID for client reference
+            orderID: ourOrderId,
             links: order.links
         });
+
     } catch (error) {
         console.error(`[${new Date().toISOString()}] ❌ Error creating PayPal order:`, error);
-        res.status(500).json({
+        res.status(500).json({ 
             error: 'Failed to create PayPal order',
-            message: error.message
+            message: error.message 
         });
     }
 });
 
-// FIXED: PayPal Shipping Callback with robust Order ID handling
+// FIXED: PayPal Shipping Callback - Order Structure Response Format
 app.post('/api/paypal/shipping-callback', async (req, res) => {
     try {
         console.log(`\n[${new Date().toISOString()}] 🚚 === PAYPAL SHIPPING CALLBACK RECEIVED ===`);
@@ -386,59 +372,45 @@ app.post('/api/paypal/shipping-callback', async (req, res) => {
 
         const { order_id, shipping_address, shipping_option, purchase_units } = req.body;
 
-        console.log(`[${new Date().toISOString()}] 📦 PayPal Order ID: ${order_id}`);
+        console.log(`[${new Date().toISOString()}] 📦 Order ID: ${order_id}`);
         console.log(`[${new Date().toISOString()}] 📍 Shipping Address:`, shipping_address);
         console.log(`[${new Date().toISOString()}] 🚛 Selected Shipping Option:`, shipping_option);
 
-        // Validate shipping address first
+        // Validate shipping address
         const addressValidation = validateShippingAddress(shipping_address);
         console.log(`[${new Date().toISOString()}] 🔍 Address validation result:`, addressValidation);
 
         if (!addressValidation.valid) {
             console.log(`[${new Date().toISOString()}] ❌ Address validation failed: ${addressValidation.message}`);
+
+            // Return 422 error for address rejection (per PayPal docs)
             const errorResponse = {
                 name: addressValidation.error,
                 message: addressValidation.message,
-                details: [{
-                    issue: addressValidation.error,
-                    description: addressValidation.message
-                }]
+                details: [
+                    {
+                        issue: addressValidation.error,
+                        description: addressValidation.message
+                    }
+                ]
             };
+
             console.log(`[${new Date().toISOString()}] 📤 Sending 422 Error Response:`, JSON.stringify(errorResponse, null, 2));
             return res.status(422).json(errorResponse);
         }
 
-        // FIXED: Extract reference ID with robust fallback handling
-        const originalPurchaseUnit = (Array.isArray(purchase_units) && purchase_units.length > 0) 
-            ? purchase_units[0] 
-            : {};
-
-        // Multi-level fallback for reference ID
-        let referenceId = originalPurchaseUnit.reference_id || 
-                         originalPurchaseUnit.custom_id || 
-                         order_id;
-
-        // Check our order mapping first
-        const orderMapping = orderMappings.get(order_id);
-        if (orderMapping) {
-            referenceId = orderMapping.ourOrderId;
-            console.log(`[${new Date().toISOString()}] 🗂️ Found order mapping: ${order_id} -> ${referenceId}`);
-        } else if (!referenceId) {
-            // Ultimate fallback if all else fails
-            referenceId = `FALLBACK-${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
-            console.warn(`[${new Date().toISOString()}] ⚠️ No reference_id found, generated fallback: ${referenceId}`);
-        }
-
-        const originalAmount = originalPurchaseUnit.amount || {};
-        const orderTotal = parseFloat(originalAmount.value || 0);
-        const currencyCode = originalAmount.currency_code || 'USD';
+        // Extract order details
+        const originalPurchaseUnit = purchase_units[0];
+        const referenceId = originalPurchaseUnit.reference_id || order_id;
+        const originalAmount = originalPurchaseUnit.amount;
+        const orderTotal = parseFloat(originalAmount.value);
+        const currencyCode = originalAmount.currency_code;
         const itemTotal = parseFloat(originalAmount.breakdown?.item_total?.value || orderTotal);
 
         console.log(`[${new Date().toISOString()}] 💰 Order Details:`);
-        console.log(`[${new Date().toISOString()}] Reference ID: ${referenceId}`);
-        console.log(`[${new Date().toISOString()}] PayPal Order ID: ${order_id}`);
-        console.log(`[${new Date().toISOString()}] Original Total: ${currencyCode} ${orderTotal}`);
-        console.log(`[${new Date().toISOString()}] Item Total: ${currencyCode} ${itemTotal}`);
+        console.log(`[${new Date().toISOString()}]    Reference ID: ${referenceId}`);
+        console.log(`[${new Date().toISOString()}]    Original Total: ${currencyCode} ${orderTotal}`);
+        console.log(`[${new Date().toISOString()}]    Item Total: ${currencyCode} ${itemTotal}`);
 
         // Calculate available shipping options
         const availableShippingOptions = calculateShippingOptions(shipping_address, {
@@ -452,52 +424,59 @@ app.post('/api/paypal/shipping-callback', async (req, res) => {
 
         if (shipping_option && shipping_option.id) {
             console.log(`[${new Date().toISOString()}] 🎯 SHIPPING_OPTIONS Event: User selected "${shipping_option.id}"`);
+
             // Update selection based on user choice
             selectedShippingOptions = availableShippingOptions.map(opt => ({
                 ...opt,
                 selected: opt.id === shipping_option.id
             }));
+
             const selectedOption = selectedShippingOptions.find(opt => opt.selected);
             selectedShippingCost = selectedOption ? parseFloat(selectedOption.amount.value) : 0;
-            console.log(`[${new Date().toISOString()}] 💰 Selected shipping cost: ${currencyCode} ${selectedShippingCost}`);
+
+            console.log(`[${new Date().toISOString()}]    💰 Selected shipping cost: ${currencyCode} ${selectedShippingCost}`);
         } else {
             console.log(`[${new Date().toISOString()}] 📍 SHIPPING_ADDRESS Event: Using default shipping option`);
+
             // Use default (first option)
             const defaultOption = selectedShippingOptions.find(opt => opt.selected) || selectedShippingOptions[0];
             selectedShippingCost = defaultOption ? parseFloat(defaultOption.amount.value) : 0;
-            console.log(`[${new Date().toISOString()}] 💰 Default shipping cost: ${currencyCode} ${selectedShippingCost}`);
+
+            console.log(`[${new Date().toISOString()}]    💰 Default shipping cost: ${currencyCode} ${selectedShippingCost}`);
         }
 
         // Calculate new order total
         const newOrderTotal = itemTotal + selectedShippingCost;
 
         console.log(`[${new Date().toISOString()}] 💰 Updated Order Calculation:`);
-        console.log(`[${new Date().toISOString()}] Items: ${currencyCode} ${itemTotal.toFixed(2)}`);
-        console.log(`[${new Date().toISOString()}] Shipping: ${currencyCode} ${selectedShippingCost.toFixed(2)}`);
-        console.log(`[${new Date().toISOString()}] New Total: ${currencyCode} ${newOrderTotal.toFixed(2)}`);
+        console.log(`[${new Date().toISOString()}]    Items: ${currencyCode} ${itemTotal.toFixed(2)}`);
+        console.log(`[${new Date().toISOString()}]    Shipping: ${currencyCode} ${selectedShippingCost.toFixed(2)}`);
+        console.log(`[${new Date().toISOString()}]    New Total: ${currencyCode} ${newOrderTotal.toFixed(2)}`);
 
-        // FIXED: Build response in PayPal Order Structure format
+        // FIXED: Build response in PayPal Order Structure format (per shipping module docs)
         const orderStructureResponse = {
-            purchase_units: [{
-                reference_id: referenceId,  // Use the resolved reference ID
-                amount: {
-                    currency_code: currencyCode,
-                    value: newOrderTotal.toFixed(2),
-                    breakdown: {
-                        item_total: {
-                            currency_code: currencyCode,
-                            value: itemTotal.toFixed(2)
-                        },
-                        shipping: {
-                            currency_code: currencyCode,
-                            value: selectedShippingCost.toFixed(2)
+            purchase_units: [
+                {
+                    reference_id: referenceId,
+                    amount: {
+                        currency_code: currencyCode,
+                        value: newOrderTotal.toFixed(2),
+                        breakdown: {
+                            item_total: {
+                                currency_code: currencyCode,
+                                value: itemTotal.toFixed(2)
+                            },
+                            shipping: {
+                                currency_code: currencyCode,
+                                value: selectedShippingCost.toFixed(2)
+                            }
                         }
+                    },
+                    shipping: {
+                        options: selectedShippingOptions
                     }
-                },
-                shipping: {
-                    options: selectedShippingOptions
                 }
-            }]
+            ]
         };
 
         console.log(`[${new Date().toISOString()}] ✅ PayPal Order Structure Response:`, JSON.stringify(orderStructureResponse, null, 2));
@@ -515,22 +494,23 @@ app.post('/api/paypal/shipping-callback', async (req, res) => {
         const errorResponse = {
             name: 'INTERNAL_ERROR',
             message: 'An error occurred processing your shipping request',
-            details: [{
-                issue: 'PROCESSING_ERROR',
-                description: error.message
-            }]
+            details: [
+                {
+                    issue: 'PROCESSING_ERROR',
+                    description: error.message
+                }
+            ]
         };
+
         console.log(`[${new Date().toISOString()}] 📤 Sending 422 Error Response:`, JSON.stringify(errorResponse, null, 2));
         res.status(422).json(errorResponse);
     }
 });
 
-// FIXED: Capture PayPal Order using PayPal's Order ID
+// Capture PayPal Order  
 app.post('/api/paypal/capture-order', async (req, res) => {
     try {
         const { orderID, cartItems, currency, country } = req.body;
-        
-        // Note: orderID here is PayPal's Order ID from the client
         console.log(`\n[${new Date().toISOString()}] 💳 Capturing PayPal order: ${orderID}`);
 
         const token = await generateAccessToken();
@@ -552,24 +532,15 @@ app.post('/api/paypal/capture-order', async (req, res) => {
         }
 
         const captureData = await response.json();
-        console.log(`[${new Date().toISOString()}] ✅ PayPal payment captured: ${captureData.id}`);
+        console.log(`[${new Date().toISOString()}] ✅ PayPal payment captured:`, captureData.id);
 
         const capture = captureData.purchase_units[0].payments.captures[0];
         const payer = captureData.payer;
         const shippingInfo = captureData.purchase_units[0].shipping;
         const shippingAddress = shippingInfo?.address;
-        const currencyInfo = getCurrencyInfo(country);
 
-        // FIXED: Get our internal order ID from mapping or generate new one
-        let ourOrderId;
-        const orderMapping = orderMappings.get(orderID);
-        if (orderMapping) {
-            ourOrderId = orderMapping.ourOrderId;
-            console.log(`[${new Date().toISOString()}] 📋 Using mapped order ID: ${ourOrderId}`);
-        } else {
-            ourOrderId = generateOrderId();
-            console.warn(`[${new Date().toISOString()}] ⚠️ No order mapping found, generated new ID: ${ourOrderId}`);
-        }
+        const currencyInfo = getCurrencyInfo(country);
+        const ourOrderId = generateOrderId();
 
         const enhancedCartItems = cartItems.map(item => ({
             id: item.id,
@@ -590,8 +561,8 @@ app.post('/api/paypal/capture-order', async (req, res) => {
         const shippingCost = req.body.shippingCost || selectedShipping?.amount?.value || '0.00';
 
         const orderRecord = {
-            orderID: ourOrderId,              // Our internal Order ID
-            paypalOrderID: orderID,           // PayPal's Order ID
+            orderID: ourOrderId,
+            paypalOrderID: captureData.id,
             transactionID: capture.id,
             customerEmail: payer.email_address,
             amount: capture.amount.value,
@@ -602,22 +573,18 @@ app.post('/api/paypal/capture-order', async (req, res) => {
             items: enhancedCartItems,
             shippingMethod: shippingMethod,
             shippingCost: shippingCost,
-            shippingAddress: shippingAddress ?
-                `${shippingAddress.address_line_1 || ''}, ${shippingAddress.admin_area_2 || ''}, ${shippingAddress.admin_area_1 || ''} ${shippingAddress.postal_code || ''}, ${shippingAddress.country_code || ''}`.trim()
+            shippingAddress: shippingAddress ? 
+                `${shippingAddress.address_line_1 || ''}, ${shippingAddress.admin_area_2 || ''}, ${shippingAddress.admin_area_1 || ''} ${shippingAddress.postal_code || ''}, ${shippingAddress.country_code || ''}`.trim() 
                 : 'N/A',
             createdAt: new Date().toISOString()
         };
 
         saveOrderToCSV(orderRecord);
 
-        // Clean up order mapping after successful capture
-        orderMappings.delete(orderID);
-        console.log(`[${new Date().toISOString()}] 🗑️ Cleaned up order mapping for: ${orderID}`);
-
         res.json({
-            orderID: ourOrderId,              // Return our internal Order ID
+            orderID: ourOrderId,
             transactionID: capture.id,
-            paypalOrderID: orderID,           // Also return PayPal's Order ID
+            paypalOrderID: captureData.id,
             amount: capture.amount.value,
             currency: capture.amount.currency_code,
             currencySymbol: currencyInfo.symbol,
@@ -631,16 +598,17 @@ app.post('/api/paypal/capture-order', async (req, res) => {
             country: country,
             items: enhancedCartItems
         });
+
     } catch (error) {
         console.error(`[${new Date().toISOString()}] ❌ Error capturing PayPal payment:`, error);
-        res.status(500).json({
+        res.status(500).json({ 
             error: 'Failed to capture PayPal payment',
-            message: error.message
+            message: error.message 
         });
     }
 });
 
-// Serve static files
+// Additional endpoints remain the same...
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -648,7 +616,7 @@ app.get('/', (req, res) => {
 // Error handling middleware
 app.use((error, req, res, next) => {
     console.error(`[${new Date().toISOString()}] ❌ Server Error:`, error);
-    res.status(500).json({
+    res.status(500).json({ 
         error: 'Internal Server Error',
         message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
     });
@@ -656,7 +624,7 @@ app.use((error, req, res, next) => {
 
 // Start server
 app.listen(PORT, async () => {
-    console.log(`\n[${new Date().toISOString()}] 🚀 ActionFigure Vault Server - FIXED PayPal Order ID Management`);
+    console.log(`\n[${new Date().toISOString()}] 🚀 ActionFigure Vault Server - PayPal Shipping Module Format`);
     console.log(`[${new Date().toISOString()}] 📍 Server: http://localhost:${PORT}`);
     console.log(`[${new Date().toISOString()}] 🔗 Callback Base URL: ${PAYPAL_CONFIG.CALLBACK_BASE_URL}`);
     console.log(`[${new Date().toISOString()}] 📝 Response Format: PayPal Order Structure (per shipping module docs)`);
@@ -669,14 +637,14 @@ app.listen(PORT, async () => {
         console.error(`[${new Date().toISOString()}] ❌ PayPal connection failed:`, error.message);
     }
 
-    console.log(`\n[${new Date().toISOString()}] 🔧 FIXED PayPal Order ID Management:`);
-    console.log(`[${new Date().toISOString()}] ✅ Always use PayPal's Order ID as primary identifier`);
-    console.log(`[${new Date().toISOString()}] ✅ Robust fallback for missing reference_id in callbacks`);
-    console.log(`[${new Date().toISOString()}] ✅ In-memory order mapping for internal tracking`);
-    console.log(`[${new Date().toISOString()}] ✅ Proper Order ID propagation through entire flow`);
-    console.log(`[${new Date().toISOString()}] ✅ Multi-level fallback prevents undefined reference errors`);
+    console.log(`\n[${new Date().toISOString()}] 🔧 PayPal Shipping Module Configuration:`);
+    console.log(`[${new Date().toISOString()}]    ✅ Order Structure Response Format`);
+    console.log(`[${new Date().toISOString()}]    ✅ HTTP 200 Success Responses`);
+    console.log(`[${new Date().toISOString()}]    ✅ HTTP 422 Error Responses for declined addresses`);
+    console.log(`[${new Date().toISOString()}]    ✅ Complete amount breakdown with shipping costs`);
+    console.log(`[${new Date().toISOString()}]    ✅ Dynamic shipping options based on address`);
 
-    console.log(`\n[${new Date().toISOString()}] 🎉 PayPal Integration - Ready with Fixed Order ID Handling!`);
+    console.log(`\n[${new Date().toISOString()}] 🎉 PayPal Shipping Module - Ready with Correct Response Format!`);
 });
 
 module.exports = app;
