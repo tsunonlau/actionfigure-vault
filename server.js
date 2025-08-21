@@ -383,7 +383,8 @@ app.post('/api/paypal/create-order', async (req, res) => {
             brand_name: 'ActionFigure Vault',
             // ENHANCED: Enable server-side shipping callbacks for both events
             order_update_callback_config: {
-                callback_url: `${req.protocol}://${req.get('host')}/api/paypal/shipping-callback`,
+                //callback_url: `${req.protocol}://${req.get('host')}/api/paypal/shipping-callback`,
+                callback_url: `${process.env.CALLBACK_BASE_URL || 'http://localhost:3000'}/api/paypal/shipping-callback`,
                 callback_events: ['SHIPPING_ADDRESS', 'SHIPPING_OPTIONS'] // Handle both events
             }
         };
