@@ -479,6 +479,7 @@ app.post('/api/paypal/shipping-callback', async (req, res) => {
 
         // FIXED: Build response using PayPal Order ID as reference
         const orderStructureResponse = {
+            id: id,
             purchase_units: [{
                 reference_id: referenceId,  // FIXED: Use PayPal Order ID
                 amount: {
