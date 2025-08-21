@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto'); // For fallback ID generation
 require('dotenv').config();
 
 const app = express();
@@ -14,7 +13,7 @@ const PAYPAL_CONFIG = {
     CLIENT_SECRET: process.env.PAYPAL_CLIENT_SECRET || 'EC5F_YVi8wiGjSTCXAK2nlM_4PgUkA_rZAB5-tZZ4_PKhycWbFy6S8_zvy6H7Iu2a6cq0BXmQkmMf76Z',
     BASE_URL: process.env.PAYPAL_BASE_URL || 'https://api-m.sandbox.paypal.com',
     WEBHOOK_ID: process.env.PAYPAL_WEBHOOK_ID || 'your-webhook-id-here',
-    CALLBACK_BASE_URL: process.env.CALLBACK_BASE_URL || 'http://localhost:3000'
+    CALLBACK_BASE_URL: process.env.CALLBACK_BASE_URL || 'https://actionfigure-vault.onrender.com'
 };
 
 // Multi-Currency Configuration
@@ -63,8 +62,8 @@ app.use(express.static(path.join(__dirname)));
 let accessToken = null;
 let tokenExpiry = null;
 
-// FIXED: In-memory order mapping to track PayPal Order IDs to our internal references
-const orderMappings = new Map(); // PayPal Order ID -> { ourOrderId, createdAt, items, etc. }
+// FIXED: In-memory order storage to track PayPal Order details
+const orderStorage = new Map(); // PayPal Order ID -> { createdAt, currency, country, originalOrderData }
 
 async function generateAccessToken() {
     try {
@@ -99,17 +98,11 @@ async function generateAccessToken() {
     }
 }
 
-function generateOrderId() {
-    const timestamp = Date.now().toString();
-    const random = Math.random().toString(36).substr(2, 5).toUpperCase();
-    return `AFV${timestamp.slice(-6)}${random}`;
-}
-
 function saveOrderToCSV(orderData) {
     const csvPath = path.join(__dirname, 'orders.csv');
 
     if (!fs.existsSync(csvPath)) {
-        const headers = 'Order_ID,PayPal_Order_ID,Transaction_ID,Customer_Email,Amount,Currency,Country,Status,Items,Item_Details,Shipping_Method,Shipping_Cost,Shipping_Address,Created_Date\n';
+        const headers = 'PayPal_Order_ID,Transaction_ID,Customer_Email,Amount,Currency,Country,Status,Items,Item_Details,Shipping_Method,Shipping_Cost,Shipping_Address,Created_Date\n';
         fs.writeFileSync(csvPath, headers, 'utf8');
     }
 
@@ -118,7 +111,6 @@ function saveOrderToCSV(orderData) {
     }).join('; ');
 
     const csvRow = [
-        orderData.orderID || '',
         orderData.paypalOrderID || '',
         orderData.transactionID || '',
         orderData.customerEmail || 'guest@actionfigurevault.com',
@@ -136,7 +128,7 @@ function saveOrderToCSV(orderData) {
 
     try {
         fs.appendFileSync(csvPath, csvRow.join(',') + '\n', 'utf8');
-        console.log(`[${new Date().toISOString()}] ✅ Order ${orderData.orderID} saved`);
+        console.log(`[${new Date().toISOString()}] ✅ Order ${orderData.paypalOrderID} saved to CSV`);
     } catch (error) {
         console.error(`[${new Date().toISOString()}] ❌ Error saving order to CSV:`, error);
     }
@@ -272,20 +264,19 @@ app.get('/api/health', (req, res) => {
         timestamp: new Date().toISOString(),
         environment: PAYPAL_CONFIG.BASE_URL.includes('sandbox') ? 'sandbox' : 'production',
         callbackBaseUrl: PAYPAL_CONFIG.CALLBACK_BASE_URL,
-        responseFormat: 'PayPal Order Structure Format (per shipping module docs)',
-        orderMappings: orderMappings.size,
+        orderStorageCount: orderStorage.size,
         features: [
             'PayPal Orders v2 API',
-            'PayPal Shipping Module Response Format',
+            'FIXED: Uses only PayPal Order IDs (no custom generation)',
             'Server-side Shipping Callbacks',
             'Multi-currency Support (HKD, USD, GBP)',
             'Dynamic Shipping Cost Calculation',
-            'FIXED: PayPal Order ID Management'
+            'PayPal Order ID throughout entire flow'
         ]
     });
 });
 
-// FIXED: Create PayPal Order with proper Order ID tracking
+// FIXED: Create PayPal Order - Uses only PayPal's Order ID
 app.post('/api/paypal/create-order', async (req, res) => {
     try {
         console.log(`[${new Date().toISOString()}] 📦 Creating PayPal order...`);
@@ -293,17 +284,14 @@ app.post('/api/paypal/create-order', async (req, res) => {
         const token = await generateAccessToken();
         const orderData = req.body;
         
-        // Generate our internal order ID for tracking
-        const ourOrderId = generateOrderId();
         const currencyCode = orderData.purchase_units[0].amount.currency_code || 'USD';
         const countryCode = orderData.purchase_units[0].shipping?.address?.country_code || 'US';
 
+        // FIXED: Add PayPal Order ID as reference_id when we get it back
         const enhancedOrderData = {
             ...orderData,
             purchase_units: orderData.purchase_units.map(unit => ({
                 ...unit,
-                reference_id: ourOrderId,  // Our internal ID for reference
-                custom_id: ourOrderId,     // Backup reference
                 soft_descriptor: 'ACTIONFIGURE'
             }))
         };
@@ -335,7 +323,7 @@ app.post('/api/paypal/create-order', async (req, res) => {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`,
-                'PayPal-Request-Id': `${ourOrderId}-${Date.now()}`,
+                'PayPal-Request-Id': `create-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 'Prefer': 'return=representation'
             },
             body: JSON.stringify(enhancedOrderData)
@@ -348,11 +336,10 @@ app.post('/api/paypal/create-order', async (req, res) => {
         }
 
         const order = await response.json();
-        const paypalOrderId = order.id; // This is PayPal's actual Order ID
+        const paypalOrderId = order.id; // FIXED: This is PayPal's actual Order ID
 
-        // FIXED: Store mapping between PayPal Order ID and our internal data
-        orderMappings.set(paypalOrderId, {
-            ourOrderId: ourOrderId,
+        // FIXED: Store order details using PayPal's Order ID
+        orderStorage.set(paypalOrderId, {
             createdAt: new Date().toISOString(),
             currency: currencyCode,
             country: countryCode,
@@ -360,12 +347,40 @@ app.post('/api/paypal/create-order', async (req, res) => {
         });
 
         console.log(`[${new Date().toISOString()}] ✅ PayPal order created: ${paypalOrderId}`);
-        console.log(`[${new Date().toISOString()}] 📋 Stored mapping: ${paypalOrderId} -> ${ourOrderId}`);
+        console.log(`[${new Date().toISOString()}] 📋 Stored order details for: ${paypalOrderId}`);
+
+        // FIXED: Now update the order to include the PayPal Order ID as reference_id
+        const updateOrderData = {
+            op: 'replace',
+            path: '/purchase_units/@reference_id==\'default\'/reference_id',
+            value: paypalOrderId
+        };
+
+        // Update the order with its own ID as reference
+        try {
+            const updateResponse = await fetch(`${PAYPAL_CONFIG.BASE_URL}/v2/checkout/orders/${paypalOrderId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify([{
+                    op: 'replace',
+                    path: '/purchase_units/@reference_id==\'default\'/reference_id',
+                    value: paypalOrderId
+                }])
+            });
+
+            if (updateResponse.ok) {
+                console.log(`[${new Date().toISOString()}] ✅ Updated order ${paypalOrderId} with self-reference`);
+            }
+        } catch (updateError) {
+            console.warn(`[${new Date().toISOString()}] ⚠️ Could not update order reference: ${updateError.message}`);
+        }
 
         res.json({
-            id: paypalOrderId,        // Return PayPal's Order ID
+            id: paypalOrderId,      // FIXED: Return only PayPal's Order ID
             status: order.status,
-            orderID: ourOrderId,      // Also return our internal ID for client reference
             links: order.links
         });
     } catch (error) {
@@ -377,7 +392,7 @@ app.post('/api/paypal/create-order', async (req, res) => {
     }
 });
 
-// FIXED: PayPal Shipping Callback with robust Order ID handling
+// FIXED: PayPal Shipping Callback - Uses PayPal Order ID as reference
 app.post('/api/paypal/shipping-callback', async (req, res) => {
     try {
         console.log(`\n[${new Date().toISOString()}] 🚚 === PAYPAL SHIPPING CALLBACK RECEIVED ===`);
@@ -408,26 +423,13 @@ app.post('/api/paypal/shipping-callback', async (req, res) => {
             return res.status(422).json(errorResponse);
         }
 
-        // FIXED: Extract reference ID with robust fallback handling
+        // FIXED: Extract order details using PayPal Order ID
         const originalPurchaseUnit = (Array.isArray(purchase_units) && purchase_units.length > 0) 
             ? purchase_units[0] 
             : {};
 
-        // Multi-level fallback for reference ID
-        let referenceId = originalPurchaseUnit.reference_id || 
-                         originalPurchaseUnit.custom_id || 
-                         order_id;
-
-        // Check our order mapping first
-        const orderMapping = orderMappings.get(order_id);
-        if (orderMapping) {
-            referenceId = orderMapping.ourOrderId;
-            console.log(`[${new Date().toISOString()}] 🗂️ Found order mapping: ${order_id} -> ${referenceId}`);
-        } else if (!referenceId) {
-            // Ultimate fallback if all else fails
-            referenceId = `FALLBACK-${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
-            console.warn(`[${new Date().toISOString()}] ⚠️ No reference_id found, generated fallback: ${referenceId}`);
-        }
+        // FIXED: Use PayPal Order ID as the reference ID
+        const referenceId = order_id; // Always use PayPal's Order ID
 
         const originalAmount = originalPurchaseUnit.amount || {};
         const orderTotal = parseFloat(originalAmount.value || 0);
@@ -435,8 +437,7 @@ app.post('/api/paypal/shipping-callback', async (req, res) => {
         const itemTotal = parseFloat(originalAmount.breakdown?.item_total?.value || orderTotal);
 
         console.log(`[${new Date().toISOString()}] 💰 Order Details:`);
-        console.log(`[${new Date().toISOString()}] Reference ID: ${referenceId}`);
-        console.log(`[${new Date().toISOString()}] PayPal Order ID: ${order_id}`);
+        console.log(`[${new Date().toISOString()}] PayPal Order ID (Reference): ${referenceId}`);
         console.log(`[${new Date().toISOString()}] Original Total: ${currencyCode} ${orderTotal}`);
         console.log(`[${new Date().toISOString()}] Item Total: ${currencyCode} ${itemTotal}`);
 
@@ -476,10 +477,10 @@ app.post('/api/paypal/shipping-callback', async (req, res) => {
         console.log(`[${new Date().toISOString()}] Shipping: ${currencyCode} ${selectedShippingCost.toFixed(2)}`);
         console.log(`[${new Date().toISOString()}] New Total: ${currencyCode} ${newOrderTotal.toFixed(2)}`);
 
-        // FIXED: Build response in PayPal Order Structure format
+        // FIXED: Build response using PayPal Order ID as reference
         const orderStructureResponse = {
             purchase_units: [{
-                reference_id: referenceId,  // Use the resolved reference ID
+                reference_id: referenceId,  // FIXED: Use PayPal Order ID
                 amount: {
                     currency_code: currencyCode,
                     value: newOrderTotal.toFixed(2),
@@ -525,12 +526,12 @@ app.post('/api/paypal/shipping-callback', async (req, res) => {
     }
 });
 
-// FIXED: Capture PayPal Order using PayPal's Order ID
+// FIXED: Capture PayPal Order - Uses PayPal Order ID throughout
 app.post('/api/paypal/capture-order', async (req, res) => {
     try {
         const { orderID, cartItems, currency, country } = req.body;
         
-        // Note: orderID here is PayPal's Order ID from the client
+        // FIXED: orderID is PayPal's Order ID from the client
         console.log(`\n[${new Date().toISOString()}] 💳 Capturing PayPal order: ${orderID}`);
 
         const token = await generateAccessToken();
@@ -560,17 +561,6 @@ app.post('/api/paypal/capture-order', async (req, res) => {
         const shippingAddress = shippingInfo?.address;
         const currencyInfo = getCurrencyInfo(country);
 
-        // FIXED: Get our internal order ID from mapping or generate new one
-        let ourOrderId;
-        const orderMapping = orderMappings.get(orderID);
-        if (orderMapping) {
-            ourOrderId = orderMapping.ourOrderId;
-            console.log(`[${new Date().toISOString()}] 📋 Using mapped order ID: ${ourOrderId}`);
-        } else {
-            ourOrderId = generateOrderId();
-            console.warn(`[${new Date().toISOString()}] ⚠️ No order mapping found, generated new ID: ${ourOrderId}`);
-        }
-
         const enhancedCartItems = cartItems.map(item => ({
             id: item.id,
             name: item.name,
@@ -589,9 +579,9 @@ app.post('/api/paypal/capture-order', async (req, res) => {
         const shippingMethod = req.body.shippingMethod || selectedShipping?.label || 'Standard Shipping';
         const shippingCost = req.body.shippingCost || selectedShipping?.amount?.value || '0.00';
 
+        // FIXED: Use PayPal Order ID as the primary order ID
         const orderRecord = {
-            orderID: ourOrderId,              // Our internal Order ID
-            paypalOrderID: orderID,           // PayPal's Order ID
+            paypalOrderID: orderID,           // FIXED: PayPal's Order ID is primary
             transactionID: capture.id,
             customerEmail: payer.email_address,
             amount: capture.amount.value,
@@ -610,14 +600,15 @@ app.post('/api/paypal/capture-order', async (req, res) => {
 
         saveOrderToCSV(orderRecord);
 
-        // Clean up order mapping after successful capture
-        orderMappings.delete(orderID);
-        console.log(`[${new Date().toISOString()}] 🗑️ Cleaned up order mapping for: ${orderID}`);
+        // Clean up order storage after successful capture
+        orderStorage.delete(orderID);
+        console.log(`[${new Date().toISOString()}] 🗑️ Cleaned up order storage for: ${orderID}`);
 
+        // FIXED: Return PayPal Order ID as the primary identifier
         res.json({
-            orderID: ourOrderId,              // Return our internal Order ID
+            orderID: orderID,                 // FIXED: Return PayPal's Order ID
             transactionID: capture.id,
-            paypalOrderID: orderID,           // Also return PayPal's Order ID
+            paypalOrderID: orderID,           // Also explicitly return it here
             amount: capture.amount.value,
             currency: capture.amount.currency_code,
             currencySymbol: currencyInfo.symbol,
@@ -656,10 +647,9 @@ app.use((error, req, res, next) => {
 
 // Start server
 app.listen(PORT, async () => {
-    console.log(`\n[${new Date().toISOString()}] 🚀 ActionFigure Vault Server - FIXED PayPal Order ID Management`);
+    console.log(`\n[${new Date().toISOString()}] 🚀 ActionFigure Vault Server - FIXED PayPal Order ID Only`);
     console.log(`[${new Date().toISOString()}] 📍 Server: http://localhost:${PORT}`);
     console.log(`[${new Date().toISOString()}] 🔗 Callback Base URL: ${PAYPAL_CONFIG.CALLBACK_BASE_URL}`);
-    console.log(`[${new Date().toISOString()}] 📝 Response Format: PayPal Order Structure (per shipping module docs)`);
 
     // Test PayPal connection
     try {
@@ -669,14 +659,14 @@ app.listen(PORT, async () => {
         console.error(`[${new Date().toISOString()}] ❌ PayPal connection failed:`, error.message);
     }
 
-    console.log(`\n[${new Date().toISOString()}] 🔧 FIXED PayPal Order ID Management:`);
-    console.log(`[${new Date().toISOString()}] ✅ Always use PayPal's Order ID as primary identifier`);
-    console.log(`[${new Date().toISOString()}] ✅ Robust fallback for missing reference_id in callbacks`);
-    console.log(`[${new Date().toISOString()}] ✅ In-memory order mapping for internal tracking`);
-    console.log(`[${new Date().toISOString()}] ✅ Proper Order ID propagation through entire flow`);
-    console.log(`[${new Date().toISOString()}] ✅ Multi-level fallback prevents undefined reference errors`);
+    console.log(`\n[${new Date().toISOString()}] 🔧 FIXED: PayPal Order ID Management:`);
+    console.log(`[${new Date().toISOString()}] ✅ REMOVED: All generateOrderId() and ourOrderId references`);
+    console.log(`[${new Date().toISOString()}] ✅ FIXED: Uses only PayPal's Order ID throughout`);
+    console.log(`[${new Date().toISOString()}] ✅ FIXED: order_id from callbacks used as reference_id`);
+    console.log(`[${new Date().toISOString()}] ✅ FIXED: CSV storage uses PayPal Order ID as primary key`);
+    console.log(`[${new Date().toISOString()}] ✅ FIXED: No custom ID generation anywhere in flow`);
 
-    console.log(`\n[${new Date().toISOString()}] 🎉 PayPal Integration - Ready with Fixed Order ID Handling!`);
+    console.log(`\n[${new Date().toISOString()}] 🎉 PayPal Integration - Complete with PayPal Order IDs Only!`);
 });
 
 module.exports = app;
