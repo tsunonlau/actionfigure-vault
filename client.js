@@ -2,7 +2,7 @@
 const PAYPAL_CONFIG = {
     CLIENT_ID: 'AQwR0albcg6vvwYGQiVRlYVAExSV_l7nXUUd6F3Rcv4-RU9ytyk3os5PtqDnGNJE6etd8tuj573OWJ3h',
     ENVIRONMENT: 'sandbox',
-    SERVER_URL: 'http://localhost:3000'
+    SERVER_URL: 'https://actionfigure-vault.onrender.com'
 };
 
 // Currency Configuration

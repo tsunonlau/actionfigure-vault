@@ -825,7 +825,7 @@ app.use((error, req, res, next) => {
 // Start server with enhanced logging
 app.listen(PORT, async () => {
     console.log(`\n🚀 ActionFigure Vault Server with PayPal JSON Patch Callbacks`);
-    console.log(`📍 Local: http://localhost:${PORT}`);
+    //console.log(`📍 Local: http://localhost:${PORT}`);
     console.log(`🌐 Environment: ${PAYPAL_CONFIG.BASE_URL.includes('sandbox') ? 'Sandbox' : 'Production'}`);
     console.log(`💳 PayPal Client ID: ${PAYPAL_CONFIG.CLIENT_ID.substring(0, 10)}...`);
 
