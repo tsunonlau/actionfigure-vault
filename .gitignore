@@ -1,0 +1,22 @@
+# Dependencies
+   node_modules/
+   
+   # Environment variables
+   .env
+   
+   # Logs
+   *.log
+   debug-shipping.log
+   
+   # OS files
+   .DS_Store
+   Thumbs.db
+   
+   # IDE files
+   .vscode/
+   .idea/
+   
+   # Runtime files
+   *.pid
+   *.seed
+   *.pid.lock

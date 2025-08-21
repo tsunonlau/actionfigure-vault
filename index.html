@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ActionFigure Vault - Premium Collectibles with Multi-Currency Shipping</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <meta name="description" content="Premium action figures and collectibles with multi-currency support and international shipping. Free shipping to Hong Kong, competitive rates worldwide.">
+    <meta name="keywords" content="action figures, collectibles, hot toys, sideshow, multi-currency, international shipping">
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p id="loading-text">Processing...</p>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>ActionFigure Vault</h1>
+                    <span class="tagline">Premium Collectibles</span>
+                </div>
+                <div class="header-actions">
+                    <!-- Enhanced Country/Currency Selector -->
+                    <div class="country-selector">
+                        <select id="country-currency-selector" class="country-currency-select">
+                            <option value="HK|HKD">🇭🇰 Hong Kong (HKD)</option>
+                            <option value="US|USD">🇺🇸 United States (USD)</option>
+                            <option value="GB|GBP">🇬🇧 United Kingdom (GBP)</option>
+                        </select>
+                    </div>
+                    <button class="search-btn" id="search-btn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <button class="cart-btn" id="cart-btn">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span id="cart-count" class="cart-count">0</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h2>Discover Premium Action Figures</h2>
+            <p>Authentic collectibles from Hot Toys, Sideshow, and more</p>
+            <p class="hero-shipping" id="hero-shipping-text">Free shipping to Hong Kong • Express delivery available</p>
+            <button class="cta-button" onclick="scrollToProducts()">
+                Shop Collection
+            </button>
+        </div>
+        <div class="hero-stats">
+            <div class="stat">
+                <h3>500+</h3>
+                <p>Premium Figures</p>
+            </div>
+            <div class="stat">
+                <h3>50+</h3>
+                <p>Exclusive Items</p>
+            </div>
+            <div class="stat">
+                <h3>24/7</h3>
+                <p>Support</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Categories Section -->
+    <section class="categories">
+        <div class="container">
+            <h2 class="section-title">Shop by Category</h2>
+            <div class="categories-grid">
+                <div class="category-card" data-category="marvel">
+                    <div class="category-icon">🦸‍♂️</div>
+                    <h3>Marvel</h3>
+                    <p>Heroes & Villains</p>
+                </div>
+                <div class="category-card" data-category="dc">
+                    <div class="category-icon">🦇</div>
+                    <h3>DC Comics</h3>
+                    <p>Justice League & More</p>
+                </div>
+                <div class="category-card" data-category="star-wars">
+                    <div class="category-icon">⚔️</div>
+                    <h3>Star Wars</h3>
+                    <p>Galactic Collection</p>
+                </div>
+                <div class="category-card" data-category="anime">
+                    <div class="category-icon">🎌</div>
+                    <h3>Anime</h3>
+                    <p>Iconic Characters</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section id="products" class="products">
+        <div class="container">
+            <div class="products-header">
+                <h2 class="section-title">Featured Collection</h2>
+                <div class="filters">
+                    <select id="category-filter" class="filter-select">
+                        <option value="all">All Categories</option>
+                        <option value="marvel">Marvel</option>
+                        <option value="dc">DC Comics</option>
+                        <option value="star-wars">Star Wars</option>
+                        <option value="anime">Anime</option>
+                    </select>
+                    <select id="price-filter" class="filter-select">
+                        <option value="all">All Prices</option>
+                        <option value="under-100">Under $100</option>
+                        <option value="100-300">$100 - $300</option>
+                        <option value="over-300">Over $300</option>
+                    </select>
+                </div>
+            </div>
+            <div id="product-grid" class="product-grid">
+                <!-- Products will be dynamically loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Enhanced Cart Sidebar with Shipping Breakdown -->
+    <div id="cart-sidebar" class="cart-sidebar">
+        <div class="cart-header">
+            <h3>Shopping Cart</h3>
+            <button id="close-cart" class="close-cart">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="cart-content">
+            <div class="cart-shipping-info" id="cart-shipping-info">
+                Shipping to Hong Kong
+            </div>
+            <div id="cart-items" class="cart-items">
+                <!-- Cart items will be dynamically loaded here -->
+            </div>
+        </div>
+        <div class="cart-summary">
+            <!-- Enhanced cart breakdown will be inserted here -->
+            <div class="cart-total">
+                <span>Total: </span>
+                <span id="cart-currency">$</span><span id="cart-total">0.00</span>
+            </div>
+            <div class="shipping-preview" id="shipping-preview">
+                <small><span class="shipping-badge">FREE</span> Standard shipping included</small>
+            </div>
+            <div class="cart-actions">
+                <button id="checkout-btn" class="checkout-btn">
+                    <i class="fas fa-credit-card"></i>
+                    Traditional Checkout
+                </button>
+                <button id="clear-cart-btn" class="clear-cart-btn">
+                    <i class="fas fa-trash"></i>
+                    Clear Cart
+                </button>
+            </div>
+            <!-- PayPal Integration -->
+            <div class="paypal-section">
+                <div class="paypal-divider">
+                    <span>or pay with</span>
+                </div>
+                <div id="paypal-button-container"></div>
+                <div id="paypal-paylater-message" class="paypal-paylater"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Overlay -->
+    <div id="cart-overlay" class="cart-overlay"></div>
+
+    <!-- Product Modal -->
+    <div id="product-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="modal-body">
+                <div class="modal-image">
+                    <img id="modal-product-image" src="" alt="Product">
+                </div>
+                <div class="modal-info">
+                    <h3 id="modal-product-name"></h3>
+                    <div class="modal-price" id="modal-product-price"></div>
+                    <p id="modal-product-description"></p>
+                    <div class="modal-shipping-info">
+                        <i class="fas fa-shipping-fast"></i>
+                        <span id="modal-shipping-text">Free shipping to Hong Kong</span>
+                    </div>
+                    <!-- Enhanced product info will be inserted here -->
+                    <div class="product-specs">
+                        <h4>Specifications</h4>
+                        <ul id="modal-product-specs"></ul>
+                    </div>
+                    <div class="modal-actions">
+                        <div class="quantity-controls">
+                            <button onclick="decreaseQuantity()">-</button>
+                            <input type="number" id="modal-quantity" value="1" min="1" max="10">
+                            <button onclick="increaseQuantity()">+</button>
+                        </div>
+                        <button id="modal-add-to-cart" class="add-to-cart-btn">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Checkout Modal with Shipping Breakdown -->
+    <div id="checkout-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3>Traditional Checkout</h3>
+            <div class="checkout-summary">
+                <h4>Order Summary</h4>
+                <div id="checkout-items" class="checkout-items">
+                    <!-- Items and shipping breakdown will be loaded here -->
+                </div>
+                <div class="checkout-total">
+                    <strong>Total: <span id="checkout-currency">$</span><span id="checkout-total">0.00</span></strong>
+                </div>
+            </div>
+            <div class="checkout-shipping">
+                <h4>Shipping Options</h4>
+                <div id="checkout-shipping-options" class="shipping-options">
+                    <!-- Shipping options will be loaded here -->
+                </div>
+            </div>
+            <form id="checkout-form" class="checkout-form">
+                <h4>Billing Information</h4>
+                <input type="text" placeholder="Full Name" required>
+                <input type="email" placeholder="Email Address" required>
+                <input type="text" placeholder="Address" required>
+                <input type="text" placeholder="City" required>
+                <input type="text" placeholder="Postal Code" required>
+                <button type="submit" class="submit-btn">Complete Order</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Enhanced Success Modal with Shipping Details -->
+    <div id="success-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="success-content">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3>Order Confirmed!</h3>
+                <div class="order-details">
+                    <div class="detail-row">
+                        <span>Order ID:</span>
+                        <span id="order-id"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Transaction ID:</span>
+                        <span id="transaction-id"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Amount Paid:</span>
+                        <span><span id="amount-paid-currency">$</span><span id="amount-paid"></span></span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Status:</span>
+                        <span id="payment-status" class="status-completed">COMPLETED</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Shipping Address:</span>
+                        <span id="shipping-address"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Shipping Method:</span>
+                        <span id="success-shipping-method"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Estimated Delivery:</span>
+                        <span id="success-delivery-estimate"></span>
+                    </div>
+                </div>
+                <div class="order-items">
+                    <h4>Items Ordered</h4>
+                    <div id="success-order-items">
+                        <!-- Order items with shipping breakdown will be loaded here -->
+                    </div>
+                </div>
+                <button class="continue-shopping-btn" onclick="continueShopping()">
+                    Continue Shopping
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>ActionFigure Vault</h4>
+                    <p>Premium collectibles with international shipping support. Specializing in Hot Toys, Sideshow, and exclusive figures.</p>
+                    <div class="shipping-info">
+                        <p><strong>Multi-Currency Support:</strong></p>
+                        <ul>
+                            <li>🇭🇰 Hong Kong Dollar (HKD) - Free Shipping</li>
+                            <li>🇺🇸 US Dollar (USD) - From $9.99</li>
+                            <li>🇬🇧 British Pound (GBP) - From £8.99</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Customer Service</h4>
+                    <ul>
+                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="#">Shipping Info</a></li>
+                        <li><a href="#">Returns</a></li>
+                        <li><a href="#">Size Guide</a></li>
+                        <li><a href="#">Track Order</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Categories</h4>
+                    <ul>
+                        <li><a href="#" onclick="categoryFilter.value='marvel'; filterProducts();">Marvel</a></li>
+                        <li><a href="#" onclick="categoryFilter.value='dc'; filterProducts();">DC Comics</a></li>
+                        <li><a href="#" onclick="categoryFilter.value='star-wars'; filterProducts();">Star Wars</a></li>
+                        <li><a href="#" onclick="categoryFilter.value='anime'; filterProducts();">Anime</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Connect</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                    <div class="payment-methods">
+                        <h5>Accepted Payments</h5>
+                        <div class="payment-icons">
+                            <i class="fab fa-paypal"></i>
+                            <i class="fab fa-cc-visa"></i>
+                            <i class="fab fa-cc-mastercard"></i>
+                            <i class="fab fa-cc-amex"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 ActionFigure Vault. All rights reserved. | Prices in multiple currencies | Free shipping to Hong Kong</p>
+                <div class="footer-features">
+                    <span><i class="fas fa-shield-alt"></i> Secure Checkout</span>
+                    <span><i class="fas fa-shipping-fast"></i> Fast Shipping</span>
+                    <span><i class="fas fa-undo"></i> Easy Returns</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- PayPal SDK - Dynamically loaded with current currency -->
+    <script src="https://www.paypal.com/sdk/js?client-id=AQwR0albcg6vvwYGQiVRlYVAExSV_l7nXUUd6F3Rcv4-RU9ytyk3os5PtqDnGNJE6etd8tuj573OWJ3h&currency=HKD&intent=capture&components=buttons,messages&enable-funding=venmo&disable-funding=card"></script>
+
+    <!-- JavaScript -->
+    <script src="client.js"></script>
+</body>
+</html>
