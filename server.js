@@ -349,40 +349,7 @@ app.post('/api/paypal/create-order', async (req, res) => {
         console.log(`[${new Date().toISOString()}] ✅ PayPal order created: ${paypalOrderId}`);
         console.log(`[${new Date().toISOString()}] 📋 Stored order details for: ${paypalOrderId}`);
 
-        // FIXED: Now update the order to include the PayPal Order ID as reference_id
-        const updateOrderData = {
-            op: 'replace',
-            path: '/purchase_units/@reference_id==\'default\'/reference_id',
-            value: paypalOrderId
-        };
-
-        // Update the order with its own ID as reference
-        try {
-            const updateResponse = await fetch(`${PAYPAL_CONFIG.BASE_URL}/v2/checkout/orders/${paypalOrderId}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify([{
-                    op: 'replace',
-                    path: '/purchase_units/@reference_id==\'default\'/reference_id',
-                    value: paypalOrderId
-                }])
-            });
-
-            if (updateResponse.ok) {
-                console.log(`[${new Date().toISOString()}] ✅ Updated order ${paypalOrderId} with self-reference`);
-            }
-        } catch (updateError) {
-            console.warn(`[${new Date().toISOString()}] ⚠️ Could not update order reference: ${updateError.message}`);
-        }
-
-        res.json({
-            id: paypalOrderId,      // FIXED: Return only PayPal's Order ID
-            status: order.status,
-            links: order.links
-        });
+        
     } catch (error) {
         console.error(`[${new Date().toISOString()}] ❌ Error creating PayPal order:`, error);
         res.status(500).json({
