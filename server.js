@@ -479,28 +479,40 @@ app.post('/api/paypal/shipping-callback', async (req, res) => {
 
         // FIXED: Build response using PayPal Order ID as reference
         const orderStructureResponse = {
-            id: id,
+            id: id, // Or use referenceId if order_id is missing
             purchase_units: [{
-                reference_id: referenceId,  // FIXED: Use PayPal Order ID
+                reference_id: referenceId,
                 amount: {
-                    currency_code: currencyCode,
-                    value: newOrderTotal.toFixed(2),
+                currency_code: currencyCode,
+                value: newOrderTotal.toFixed(2),
                     breakdown: {
                         item_total: {
-                            currency_code: currencyCode,
-                            value: itemTotal.toFixed(2)
+                        currency_code: currencyCode,
+                        value: itemTotal.toFixed(2)
+                        },
+                        tax_total: {
+                        currency_code: currencyCode,
+                        value: '0.00' // (Add real tax logic if needed)
                         },
                         shipping: {
-                            currency_code: currencyCode,
-                            value: selectedShippingCost.toFixed(2)
+                        currency_code: currencyCode,
+                        value: selectedShippingCost.toFixed(2)
                         }
                     }
                 },
-                shipping: {
-                    options: selectedShippingOptions
-                }
+                shipping_options: selectedShippingOptions.map(opt => ({
+                id: opt.id,
+                amount: {
+                    currency_code: currencyCode,
+                    value: opt.amount.value
+                },
+                type: opt.type,
+                label: opt.label,
+                selected: !!opt.selected
+                }))
             }]
         };
+
 
         console.log(`[${new Date().toISOString()}] ✅ PayPal Order Structure Response:`, JSON.stringify(orderStructureResponse, null, 2));
         console.log(`[${new Date().toISOString()}] 📤 Sending HTTP 200 OK with order structure`);
