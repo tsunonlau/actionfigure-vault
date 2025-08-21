@@ -349,7 +349,11 @@ app.post('/api/paypal/create-order', async (req, res) => {
         console.log(`[${new Date().toISOString()}] ✅ PayPal order created: ${paypalOrderId}`);
         console.log(`[${new Date().toISOString()}] 📋 Stored order details for: ${paypalOrderId}`);
 
-        
+        res.json({
+            id: paypalOrderId,      // FIXED: Return only PayPal's Order ID
+            status: order.status,
+            links: order.links
+        });
     } catch (error) {
         console.error(`[${new Date().toISOString()}] ❌ Error creating PayPal order:`, error);
         res.status(500).json({
