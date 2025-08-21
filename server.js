@@ -399,9 +399,9 @@ app.post('/api/paypal/shipping-callback', async (req, res) => {
         console.log(`[${new Date().toISOString()}] 📋 Request Headers:`, JSON.stringify(req.headers, null, 2));
         console.log(`[${new Date().toISOString()}] 📋 Full Request Body:`, JSON.stringify(req.body, null, 2));
 
-        const { order_id, shipping_address, shipping_option, purchase_units } = req.body;
+        const { id, shipping_address, shipping_option, purchase_units } = req.body;
 
-        console.log(`[${new Date().toISOString()}] 📦 PayPal Order ID: ${order_id}`);
+        console.log(`[${new Date().toISOString()}] 📦 PayPal Order ID: ${id}`);
         console.log(`[${new Date().toISOString()}] 📍 Shipping Address:`, shipping_address);
         console.log(`[${new Date().toISOString()}] 🚛 Selected Shipping Option:`, shipping_option);
 
