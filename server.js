@@ -429,7 +429,7 @@ app.post('/api/paypal/shipping-callback', async (req, res) => {
             : {};
 
         // FIXED: Use PayPal Order ID as the reference ID
-        const referenceId = order_id; // Always use PayPal's Order ID
+        const referenceId = id; // Always use PayPal's Order ID
 
         const originalAmount = originalPurchaseUnit.amount || {};
         const orderTotal = parseFloat(originalAmount.value || 0);
