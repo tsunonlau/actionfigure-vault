@@ -323,7 +323,7 @@ app.post('/api/paypal/create-order', async (req, res) => {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`,
-                'PayPal-Request-Id': `create-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                'PayPal-Request-Id': `create-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
                 'Prefer': 'return=representation'
             },
             body: JSON.stringify(enhancedOrderData)
@@ -548,7 +548,7 @@ app.post('/api/paypal/capture-order', async (req, res) => {
             price: item.price,
             quantity: item.quantity,
             sku: item.sku || `SKU-${item.id}`,
-            upc: item.upc || `UPC${Math.random().toString().substr(2, 12)}`,
+            upc: item.upc || `UPC${Math.random().toString().substring(2, 12)}`,
             image_url: item.image_url || `https://actionfigurevault.com/images/product-${item.id}.jpg`,
             url: item.url || `https://actionfigurevault.com/products/product-${item.id}`,
             weight: item.weight || 1.0,
@@ -567,7 +567,7 @@ app.post('/api/paypal/capture-order', async (req, res) => {
             customerEmail: payer.email_address,
             amount: capture.amount.value,
             currency: capture.amount.currency_code,
-            currencySymbol: currencyInfo.symbol,
+            //currencySymbol: currencyInfo.symbol,
             status: capture.status,
             items: enhancedCartItems,
             shippingMethod: shippingMethod,
