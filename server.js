@@ -591,7 +591,7 @@ app.post('/api/paypal/capture-order', async (req, res) => {
             paypalOrderID: orderID,           // Also explicitly return it here
             amount: capture.amount.value,
             currency: capture.amount.currency_code,
-            currencySymbol: currencyInfo.symbol,
+            //currencySymbol: currencyInfo.symbol,
             status: capture.status,
             customerEmail: payer.email_address,
             payerName: payer.name ? `${payer.name.given_name} ${payer.name.surname}` : 'N/A',
@@ -599,7 +599,7 @@ app.post('/api/paypal/capture-order', async (req, res) => {
             shippingMethod: shippingMethod,
             shippingCost: shippingCost,
             captureDate: capture.create_time,
-            country: country,
+            //country: country,
             items: enhancedCartItems
         });
     } catch (error) {
