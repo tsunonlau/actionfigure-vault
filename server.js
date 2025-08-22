@@ -513,8 +513,8 @@ app.post('/api/paypal/shipping-callback', async (req, res) => {
 // FIXED: Capture PayPal Order - Uses PayPal Order ID throughout
 app.post('/api/paypal/capture-order', async (req, res) => {
     try {
-        const { orderID, cartItems, currency, country } = req.body;
-        
+        //const { orderID, cartItems, currency, country } = req.body;
+        const { orderID, cartItems } = req.body;
         // FIXED: orderID is PayPal's Order ID from the client
         console.log(`\n[${new Date().toISOString()}] 💳 Capturing PayPal order: ${orderID}`);
 

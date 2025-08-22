@@ -668,6 +668,7 @@ function renderPayPalButtons() {
                 //const shippingCost = calculateShippingCost();
 
                 // Call server to capture payment
+                console.log('Attempting to Capture Payment');
                 const response = await fetch(`${PAYPAL_CONFIG.SERVER_URL}/api/paypal/capture-order`, {
                     method: 'POST',
                     headers: {
@@ -675,7 +676,7 @@ function renderPayPalButtons() {
                     },
                     body: JSON.stringify({
                         orderID: data.orderID,
-                        cartItems: cart,
+                        cartItems: cart
                         // ENHANCED: Include shipping details
                         //currency: currentCurrency.code,
                         //country: currentCountry,
