@@ -541,7 +541,6 @@ app.post('/api/paypal/capture-order', async (req, res) => {
         const payer = captureData.payer;
         const shippingInfo = captureData.purchase_units[0].shipping;
         const shippingAddress = shippingInfo?.address;
-        const currencyInfo = getCurrencyInfo(country);
 
         const enhancedCartItems = cartItems.map(item => ({
             id: item.id,
@@ -569,7 +568,6 @@ app.post('/api/paypal/capture-order', async (req, res) => {
             amount: capture.amount.value,
             currency: capture.amount.currency_code,
             currencySymbol: currencyInfo.symbol,
-            country: country,
             status: capture.status,
             items: enhancedCartItems,
             shippingMethod: shippingMethod,

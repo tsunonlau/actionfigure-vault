@@ -664,7 +664,7 @@ function renderPayPalButtons() {
         onApprove: async function(data, actions) {
             try {
                 showLoading('Processing payment...');
-
+                console.log('[PayPal] onApprove called with:', data);
                 // ENHANCED: Include shipping information in capture request
                 //const shippingMethod = getSelectedShippingMethod();
                 //const shippingCost = calculateShippingCost();
