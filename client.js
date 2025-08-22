@@ -581,7 +581,25 @@ function renderPayPalButtons() {
                 // Enhanced order data with proper shipping breakdown
                 const orderData = {
                     intent: 'CAPTURE',
+                    payment_source: {
+                        paypal: {
+                            experience_context: {
+                                user_action: 'PAY_NOW',
+                                shipping_preference: 'GET_FROM_FILE', // Enable server-side shipping callbacks
+                                brand_name: 'ActionFigure Vault',
+                                return_url: window.location.origin + '/success',
+                                cancel_url: window.location.origin + '/cancel',
+                                // ENHANCED: Enable both address and shipping option callbacks
+                                order_update_callback_config: {
+                                    callback_url: `${PAYPAL_CONFIG.SERVER_URL}/api/paypal/shipping-callback`,
+                                    callback_events: ['SHIPPING_ADDRESS', 'SHIPPING_OPTIONS'] // Handle both events
+                                }
+                            }
+                        }
+                    },
                     purchase_units: [{
+                        //reference ID for shipping callback to uniquely identify the transaction
+                        reference_id: `RFID${Math.random().toString().substring(2,12)}`,
                         amount: {
                             currency_code: currentCurrency.code,
                             value: orderTotal.toFixed(2), // Total including shipping
@@ -614,23 +632,7 @@ function renderPayPalButtons() {
                         shipping: {
                             address: getDefaultShippingAddress()
                         }
-                    }],
-                    payment_source: {
-                        paypal: {
-                            experience_context: {
-                                shipping_preference: 'GET_FROM_FILE', // Enable server-side shipping callbacks
-                                user_action: 'PAY_NOW',
-                                brand_name: 'ActionFigure Vault',
-                                return_url: window.location.origin + '/success',
-                                cancel_url: window.location.origin + '/cancel',
-                                // ENHANCED: Enable both address and shipping option callbacks
-                                order_update_callback_config: {
-                                    callback_url: `${PAYPAL_CONFIG.SERVER_URL}/api/paypal/shipping-callback`,
-                                    callback_events: ['SHIPPING_ADDRESS', 'SHIPPING_OPTIONS'] // Handle both events
-                                }
-                            }
-                        }
-                    }
+                    }]
                 };
 
                 // Call server to create PayPal order with shipping callbacks
