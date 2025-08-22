@@ -676,9 +676,9 @@ function renderPayPalButtons() {
                     body: JSON.stringify({
                         orderID: data.orderID,
                         cartItems: cart,
-                        currency: currentCurrency.code,
-                        country: currentCountry,
                         // ENHANCED: Include shipping details
+                        //currency: currentCurrency.code,
+                        //country: currentCountry,
                         //shippingMethod: shippingMethod.name,
                         //shippingCost: shippingCost.toFixed(2)
                     })
