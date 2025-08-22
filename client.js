@@ -665,10 +665,6 @@ function renderPayPalButtons() {
             try {
                 showLoading('Processing payment...');
                 console.log('[PayPal] onApprove called with:', data);
-                // ENHANCED: Include shipping information in capture request
-                //const shippingMethod = getSelectedShippingMethod();
-                //const shippingCost = calculateShippingCost();
-
                 // Call server to capture payment
                 console.log('Attempting to Capture Payment');
                 const response = await fetch(`${PAYPAL_CONFIG.SERVER_URL}/api/paypal/capture-order`, {
@@ -679,11 +675,6 @@ function renderPayPalButtons() {
                     body: JSON.stringify({
                         orderID: data.orderID,
                         cartItems: cart
-                        // ENHANCED: Include shipping details
-                        //currency: currentCurrency.code,
-                        //country: currentCountry,
-                        //shippingMethod: shippingMethod.name,
-                        //shippingCost: shippingCost.toFixed(2)
                     })
                 });
 

@@ -551,8 +551,7 @@ app.post('/api/paypal/capture-order', async (req, res) => {
             upc: item.upc || `UPC${Math.random().toString().substring(2, 12)}`,
             image_url: item.image_url || `https://actionfigurevault.com/images/product-${item.id}.jpg`,
             url: item.url || `https://actionfigurevault.com/products/product-${item.id}`,
-            weight: item.weight || 1.0,
-            //currency: currency
+            weight: item.weight || 1.0
         }));
 
         const shippingOptions = shippingInfo?.options || [];
@@ -567,7 +566,6 @@ app.post('/api/paypal/capture-order', async (req, res) => {
             customerEmail: payer.email_address,
             amount: capture.amount.value,
             currency: capture.amount.currency_code,
-            //currencySymbol: currencyInfo.symbol,
             status: capture.status,
             items: enhancedCartItems,
             shippingMethod: shippingMethod,
@@ -591,7 +589,6 @@ app.post('/api/paypal/capture-order', async (req, res) => {
             paypalOrderID: orderID,           // Also explicitly return it here
             amount: capture.amount.value,
             currency: capture.amount.currency_code,
-            //currencySymbol: currencyInfo.symbol,
             status: capture.status,
             customerEmail: payer.email_address,
             payerName: payer.name ? `${payer.name.given_name} ${payer.name.surname}` : 'N/A',
@@ -599,7 +596,6 @@ app.post('/api/paypal/capture-order', async (req, res) => {
             shippingMethod: shippingMethod,
             shippingCost: shippingCost,
             captureDate: capture.create_time,
-            //country: country,
             items: enhancedCartItems
         });
     } catch (error) {
