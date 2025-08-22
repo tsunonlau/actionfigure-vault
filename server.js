@@ -399,16 +399,14 @@ app.post('/api/paypal/shipping-callback', async (req, res) => {
             ? purchase_units[0] 
             : {};
 
-        // FIXED: Use PayPal Order ID as the reference ID
-        const referenceId = id; // Always use PayPal's Order ID
-
+        const referenceId = originalPurchaseUnit.reference_id; // Use reference ID passed from client side
         const originalAmount = originalPurchaseUnit.amount || {};
         const orderTotal = parseFloat(originalAmount.value || 0);
         const currencyCode = originalAmount.currency_code || 'USD';
         const itemTotal = parseFloat(originalAmount.breakdown?.item_total?.value || orderTotal);
 
         console.log(`[${new Date().toISOString()}] 💰 Order Details:`);
-        console.log(`[${new Date().toISOString()}] PayPal Order ID (Reference): ${referenceId}`);
+        console.log(`[${new Date().toISOString()}] PayPal Order ID (Reference): ${id}`);
         console.log(`[${new Date().toISOString()}] Original Total: ${currencyCode} ${orderTotal}`);
         console.log(`[${new Date().toISOString()}] Item Total: ${currencyCode} ${itemTotal}`);
 
