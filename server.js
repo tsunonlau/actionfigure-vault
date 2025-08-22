@@ -552,7 +552,7 @@ app.post('/api/paypal/capture-order', async (req, res) => {
             image_url: item.image_url || `https://actionfigurevault.com/images/product-${item.id}.jpg`,
             url: item.url || `https://actionfigurevault.com/products/product-${item.id}`,
             weight: item.weight || 1.0,
-            currency: currency
+            //currency: currency
         }));
 
         const shippingOptions = shippingInfo?.options || [];
