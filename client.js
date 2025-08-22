@@ -664,8 +664,8 @@ function renderPayPalButtons() {
                 showLoading('Processing payment...');
 
                 // ENHANCED: Include shipping information in capture request
-                const shippingMethod = getSelectedShippingMethod();
-                const shippingCost = calculateShippingCost();
+                //const shippingMethod = getSelectedShippingMethod();
+                //const shippingCost = calculateShippingCost();
 
                 // Call server to capture payment
                 const response = await fetch(`${PAYPAL_CONFIG.SERVER_URL}/api/paypal/capture-order`, {
@@ -679,8 +679,8 @@ function renderPayPalButtons() {
                         currency: currentCurrency.code,
                         country: currentCountry,
                         // ENHANCED: Include shipping details
-                        shippingMethod: shippingMethod.name,
-                        shippingCost: shippingCost.toFixed(2)
+                        //shippingMethod: shippingMethod.name,
+                        //shippingCost: shippingCost.toFixed(2)
                     })
                 });
 
