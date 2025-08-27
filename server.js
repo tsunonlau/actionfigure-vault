@@ -276,6 +276,16 @@ app.get('/api/health', (req, res) => {
     });
 });
 
+//Provide a HTTP method to retrieve the orders.csv file
+app.get('/download/orders', (req, res) => {
+    const csvPath = path.join(__dirname, 'orders.csv');
+    if (fs.existsSync(csvPath)) {
+        res.download(csvPath);
+    } else {
+        res.status(404).send('File not found');
+    }
+});
+
 // FIXED: Create PayPal Order - Uses only PayPal's Order ID
 app.post('/api/paypal/create-order', async (req, res) => {
     try {
