@@ -317,7 +317,7 @@ app.post('/api/paypal/create-order', async (req, res) => {
         const callbackUrl = `${PAYPAL_CONFIG.CALLBACK_BASE_URL}/api/paypal/shipping-callback`;
         enhancedOrderData.payment_source.paypal.experience_context = {
             ...enhancedOrderData.payment_source?.paypal?.experience_context,
-            shipping_preference: 'GET_FROM_FILE',
+            shipping_preference: 'SET_PROVIDED_ADDRESS', // 'GET_FROM_FILE allows buyer change address, SET_PROVIDED_ADDRESS prevents that
             user_action: 'PAY_NOW',
             brand_name: 'ActionFigure Vault',
             order_update_callback_config: {
