@@ -585,7 +585,7 @@ function renderPayPalButtons() {
                         paypal: {
                             experience_context: {
                                 user_action: 'PAY_NOW',
-                                shipping_preference: 'GET_FROM_FILE', // Enable server-side shipping callbacks
+                                shipping_preference: 'SET_PROVIDED_ADDRESS', // Enable server-side shipping callbacks, Set SET_PROVIDED_ADDRESS to prevent it
                                 brand_name: 'ActionFigure Vault',
                                 return_url: window.location.origin + '/success',
                                 cancel_url: window.location.origin + '/cancel',
