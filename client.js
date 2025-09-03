@@ -626,7 +626,8 @@ function renderPayPalButtons() {
                                 },
                                 quantity: cartItem.quantity.toString(),
                                 category: 'PHYSICAL_GOODS',
-                                sku: product ? product.sku : `SKU-${cartItem.id}`
+                                sku: product ? product.sku : `SKU-${cartItem.id}`,
+                                upc: product ? product.upc
                             };
                         }),
                         shipping: {
