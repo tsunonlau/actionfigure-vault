@@ -627,7 +627,22 @@ function renderPayPalButtons() {
                                 quantity: cartItem.quantity.toString(),
                                 category: 'PHYSICAL_GOODS',
                                 sku: product ? product.sku : `SKU-${cartItem.id}`,
-                                upc: product ? product.upc
+                                // Fixed items array - removing unsupported PayPal fields
+                        items: cart.map(cartItem => {
+                            const product = products.find(p => p.id === cartItem.id);
+                            const convertedPrice = getProductPrice(product);
+                            return {
+                                name: cartItem.name,
+                                unit_amount: {
+                                    currency_code: currentCurrency.code,
+                                    value: convertedPrice.toFixed(2)
+                                },
+                                quantity: cartItem.quantity.toString(),
+                                category: 'PHYSICAL_GOODS',
+                                sku: product ? product.sku : `SKU-${cartItem.id}`,
+                                upc: product.upc
+                            };
+                        })
                             };
                         }),
                         shipping: {
