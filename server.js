@@ -313,7 +313,7 @@ app.post('/api/paypal/create-order', async (req, res) => {
         if (!enhancedOrderData.payment_source.paypal) {
             enhancedOrderData.payment_source.paypal = {};
         }
-        console.log(`📋 Show Create order details: ${enhancedOrderData}`);
+        console.log(`📋 Show Create order details:`, JSON.stringify(enhancedOrderData, null, 2));
         const callbackUrl = `${PAYPAL_CONFIG.CALLBACK_BASE_URL}/api/paypal/shipping-callback`;
         enhancedOrderData.payment_source.paypal.experience_context = {
             ...enhancedOrderData.payment_source?.paypal?.experience_context,
