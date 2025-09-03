@@ -1,8 +1,8 @@
 // PayPal Configuration with Multi-Currency Support
 const PAYPAL_CONFIG = {
-    CLIENT_ID: process.env.PAYPAL_CLIENT_ID || 'AQwR0albcg6vvwYGQiVRlYVAExSV_l7nXUUd6F3Rcv4-RU9ytyk3os5PtqDnGNJE6etd8tuj573OWJ3h',
+    CLIENT_ID: 'AUS-78-lLNn1spgQkDuEoiyrQE2VYILSRLaX0ziWiH-AAE3cLg89Rt_AZmsb8zlaU0tpMjzS4jNSopMm',
     ENVIRONMENT: 'sandbox',
-    SERVER_URL: process.env.CALLBACK_BASE_URL || 'https://actionfigure-vault-prod.onrender.com'
+    SERVER_URL: 'https://actionfigure-vault-prod.onrender.com'
 };
 
 // Currency Configuration
