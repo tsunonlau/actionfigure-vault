@@ -493,7 +493,7 @@ app.post('/api/paypal/shipping-callback', async (req, res) => {
         };
 
 
-        console.log(`[${new Date().toISOString()}] ✅ PayPal Order Structure Response:`, JSON.stringify(orderStructureResponse, null, 2));
+        //console.log(`[${new Date().toISOString()}] ✅ PayPal Order Structure Response:`, JSON.stringify(orderStructureResponse, null, 2));
         console.log(`[${new Date().toISOString()}] 📤 Sending HTTP 200 OK with order structure`);
         console.log(`[${new Date().toISOString()}] === END SHIPPING CALLBACK ===\n`);
 
