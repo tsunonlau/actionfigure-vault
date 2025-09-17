@@ -65,6 +65,7 @@ const products = [
         specs: ["1/6 Scale (12 inches)", "Die-cast metal construction", "LED light features", "Multiple articulation points", "Authentic accessories"],
         badge: "new",
         inStock: true,
+        tangible: "PHYSICAL_GOODS",
         weight: 1.2 // kg for shipping calculations
     },
     {
@@ -81,6 +82,7 @@ const products = [
         specs: ["1/6 Scale (13.5 inches)", "Fabric costume", "Light-up lightsaber", "Helmeted and unmasked heads", "Display base included"],
         badge: "sale",
         inStock: true,
+        tangible: "PHYSICAL_GOODS",
         weight: 1.4
     },
     {
@@ -97,6 +99,7 @@ const products = [
         specs: ["1/6 Scale (12.5 inches)", "Detailed fabric suit", "Multiple head sculpts", "Weapon accessories", "Poseable cape"],
         badge: "",
         inStock: true,
+        tangible: "PHYSICAL_GOODS",
         weight: 1.3
     },
     {
@@ -113,6 +116,7 @@ const products = [
         specs: ["1/6 Scale (11.5 inches)", "Flexible body", "Web shooting effects", "Multiple hand options", "Display stand"],
         badge: "new",
         inStock: true,
+        tangible: "PHYSICAL_GOODS",
         weight: 1.0
     },
     {
@@ -129,6 +133,7 @@ const products = [
         specs: ["1/6 Scale Mandalorian", "Life-size Grogu figure", "Beskar armor details", "Multiple weapons", "Floating pram accessory"],
         badge: "",
         inStock: true,
+        tangible: "PHYSICAL_GOODS",
         weight: 1.8
     },
     {
@@ -145,6 +150,7 @@ const products = [
         specs: ["1/6 Scale (11 inches)", "Golden Eagle Armor", "Lasso of Truth", "Multiple expressions", "Tiara and bracelets"],
         badge: "sale",
         inStock: true,
+        tangible: "PHYSICAL_GOODS",
         weight: 1.1
     },
     {
@@ -161,6 +167,7 @@ const products = [
         specs: ["6 inches tall", "Ultra Instinct aura effects", "Multiple face plates", "Energy blast accessories", "Stand included"],
         badge: "new",
         inStock: true,
+        tangible: "PHYSICAL_GOODS",
         weight: 0.4
     },
     {
@@ -177,6 +184,7 @@ const products = [
         specs: ["1/6 Scale (12 inches)", "Mjolnir hammer", "Battle-damaged shield", "Authentic likeness", "Multiple hands"],
         badge: "",
         inStock: true,
+        tangible: "PHYSICAL_GOODS",
         weight: 1.2
     },
     {
@@ -193,6 +201,7 @@ const products = [
         specs: ["1/6 Scale (12 inches)", "Detailed Mandalorian armor", "Functional jetpack", "Blaster rifle", "Weathered finish"],
         badge: "sale",
         inStock: true,
+        tangible: "PHYSICAL_GOODS",
         weight: 1.5
     },
     {
@@ -209,6 +218,7 @@ const products = [
         specs: ["1/6 Scale (12 inches)", "Purple suit", "Multiple expressions", "Photography props", "Carnival accessories"],
         badge: "new",
         inStock: true,
+        tangible: "PHYSICAL_GOODS",
         weight: 1.1
     },
     {
@@ -225,6 +235,7 @@ const products = [
         specs: ["6 inches tall", "Multiple face expressions", "Rasengan effect", "Kunai accessories", "Poseable figure"],
         badge: "",
         inStock: true,
+        tangible: "PHYSICAL_GOODS",
         weight: 0.3
     },
     {
@@ -241,7 +252,25 @@ const products = [
         specs: ["1/6 Scale (12.5 inches)", "Stormbreaker axe", "Lightning effects", "Detailed armor", "Cape accessory"],
         badge: "new",
         inStock: true,
+        tangible: "PHYSICAL_GOODS",
         weight: 1.3
+    },
+    {
+        id: 13,
+        name: "GHOST (DIGITAL GOOD)",
+        category: "marvel",
+        basePrice: 295.50,
+        sku: "HT-MV-TH-013",
+        upc: "630509076545",
+        image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='250' viewBox='0 0 280 250'%3E%3Crect width='280' height='250' fill='%23dc2626'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-family='Arial' font-size='14' fill='white'%3EThor Figure%3C/text%3E%3C/svg%3E",
+        image_url: "https://cdn.actionfigurevault.com/products/ghost.jpg",
+        url: "https://actionfigurevault.com/products/ghost",
+        description: "A ghost (DIGITAL GOOD)",
+        specs: ["1/6 Scale (12.5 inches)"],
+        badge: "new",
+        inStock: true,
+        tangible: "DIGITAL_GOODS",
+        weight: 0.1
     }
 ];
 
@@ -625,7 +654,7 @@ function renderPayPalButtons() {
                                     value: convertedPrice.toFixed(2)
                                 },
                                 quantity: cartItem.quantity.toString(),
-                                category: 'PHYSICAL_GOODS',
+                                category: product.tangible,
                                 sku: product ? product.sku : `SKU-${cartItem.id}`
                             };
                         }),
