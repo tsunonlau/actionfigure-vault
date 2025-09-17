@@ -35,4 +35,4 @@ EXPRESS_SHIPPING_COST=19.99
 # Product Configuration
 PRODUCT_IMAGE_CDN=https://cdn.actionfigurevault.com
 PRODUCT_BASE_URL=https://actionfigurevault.com/products
-CALLBACK_BASE_URL=https://actionfigure-vault.onrender.com
+CALLBACK_BASE_URL=https://actionfigure-vault-prod.onrender.com

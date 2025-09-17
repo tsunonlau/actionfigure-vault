@@ -13,7 +13,7 @@ const PAYPAL_CONFIG = {
     CLIENT_SECRET: process.env.PAYPAL_CLIENT_SECRET || 'EC5F_YVi8wiGjSTCXAK2nlM_4PgUkA_rZAB5-tZZ4_PKhycWbFy6S8_zvy6H7Iu2a6cq0BXmQkmMf76Z',
     BASE_URL: process.env.PAYPAL_BASE_URL || 'https://api-m.sandbox.paypal.com',
     WEBHOOK_ID: process.env.PAYPAL_WEBHOOK_ID || 'your-webhook-id-here',
-    CALLBACK_BASE_URL: process.env.CALLBACK_BASE_URL || 'https://actionfigure-vault.onrender.com'
+    CALLBACK_BASE_URL: process.env.CALLBACK_BASE_URL || 'https://actionfigure-vault-prod.onrender.com'
 };
 
 // Multi-Currency Configuration
