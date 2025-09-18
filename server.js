@@ -375,87 +375,103 @@ app.post('/api/paypal/create-order', async (req, res) => {
 
 // Modified shipping callback to store selected shipping method
 app.post('/api/paypal/shipping-callback', async (req, res) => {
-    try {
-        const { id, shipping_address, shipping_option } = req.body;
-        
-        // Calculate available shipping options
-        const availableShippingOptions = calculateShippingOptions(shipping_address, {
-            total: itemTotal,
-            currency: currencyCode
-        });
-
-        let selectedShippingOptions = availableShippingOptions;
-        let selectedShippingCost = 0;
-        let finalSelectedMethod = null;
-
-        if (shipping_option && shipping_option.id) {
-            console.log(`User selected "${shipping_option.id}"`);
-            selectedShippingOptions = availableShippingOptions.map(opt => ({
-                ...opt,
-                selected: opt.id === shipping_option.id
-            }));
-            finalSelectedMethod = selectedShippingOptions.find(opt => opt.selected);
-            selectedShippingCost = finalSelectedMethod ? parseFloat(finalSelectedMethod.amount.value) : 0;
-        } else {
-            finalSelectedMethod = selectedShippingOptions.find(opt => opt.selected) || selectedShippingOptions[0];
-            selectedShippingCost = finalSelectedMethod ? parseFloat(finalSelectedMethod.amount.value) : 0;
-        }
-
-        // **NEW**: Store the selected shipping method in order storage
-        if (orderStorage.has(id)) {
-            const orderDetails = orderStorage.get(id);
-            orderDetails.selectedShippingMethod = {
-                id: finalSelectedMethod.id,
-                label: finalSelectedMethod.label,
-                cost: selectedShippingCost,
-                currency: currencyCode
-            };
-            orderStorage.set(id, orderDetails);
-            console.log(`Stored selected shipping method: ${finalSelectedMethod.label}`);
-        }
-
-        // Calculate new order total
-        const newOrderTotal = itemTotal + selectedShippingCost;
-
-        const orderStructureResponse = {
-            id: id,
-            purchase_units: [{
-                reference_id: referenceId,
-                amount: {
-                    currency_code: currencyCode,
-                    value: newOrderTotal.toFixed(2),
-                    breakdown: {
-                        item_total: {
-                            currency_code: currencyCode,
-                            value: itemTotal.toFixed(2)
-                        },
-                        shipping: {
-                            currency_code: currencyCode,
-                            value: selectedShippingCost.toFixed(2)
-                        }
-                    }
-                },
-                shipping_options: selectedShippingOptions.map(opt => ({
-                    id: opt.id,
-                    amount: {
-                        currency_code: currencyCode,
-                        value: opt.amount.value
-                    },
-                    type: opt.type,
-                    label: opt.label,
-                    selected: !!opt.selected
-                }))
-            }]
-        };
-
-        res.status(200).json(orderStructureResponse);
-    } catch (error) {
-        console.error('Error in shipping callback:', error);
-        res.status(422).json({
-            name: 'INTERNAL_ERROR',
-            message: 'An error occurred processing your shipping request'
-        });
+  try {
+    const { id, shipping_address, shipping_option } = req.body;
+    
+    // FIXED: Get order details from storage to access itemTotal and currency
+    const storedOrderDetails = orderStorage.get(id);
+    if (!storedOrderDetails) {
+      throw new Error(`Order ${id} not found in storage`);
     }
+    
+    // FIXED: Extract itemTotal and currencyCode from stored order data
+    const originalOrder = storedOrderDetails.originalOrderData;
+    const purchaseUnit = originalOrder.purchase_units[0];
+    const itemTotal = parseFloat(purchaseUnit.amount.breakdown?.item_total?.value || purchaseUnit.amount.value || 0);
+    const currencyCode = purchaseUnit.amount.currency_code || storedOrderDetails.currency || 'USD';
+    const referenceId = purchaseUnit.reference_id || `default-ref-${id}`;
+    
+    console.log(`[${new Date().toISOString()}] 🚚 Processing shipping callback for order: ${id}`);
+    console.log(`[${new Date().toISOString()}] 💰 Item Total: ${itemTotal}, Currency: ${currencyCode}`);
+    
+    // Calculate available shipping options
+    const availableShippingOptions = calculateShippingOptions(shipping_address, {
+      total: itemTotal,
+      currency: currencyCode
+    });
+
+    let selectedShippingOptions = availableShippingOptions;
+    let selectedShippingCost = 0;
+    let finalSelectedMethod = null;
+
+    if (shipping_option && shipping_option.id) {
+      console.log(`User selected "${shipping_option.id}"`);
+      selectedShippingOptions = availableShippingOptions.map(opt => ({
+        ...opt,
+        selected: opt.id === shipping_option.id
+      }));
+      finalSelectedMethod = selectedShippingOptions.find(opt => opt.selected);
+      selectedShippingCost = finalSelectedMethod ? parseFloat(finalSelectedMethod.amount.value) : 0;
+    } else {
+      finalSelectedMethod = selectedShippingOptions.find(opt => opt.selected) || selectedShippingOptions[0];
+      selectedShippingCost = finalSelectedMethod ? parseFloat(finalSelectedMethod.amount.value) : 0;
+    }
+
+    // Store the selected shipping method in order storage
+    if (orderStorage.has(id)) {
+      const orderDetails = orderStorage.get(id);
+      orderDetails.selectedShippingMethod = {
+        id: finalSelectedMethod.id,
+        label: finalSelectedMethod.label,
+        cost: selectedShippingCost,
+        currency: currencyCode
+      };
+      orderStorage.set(id, orderDetails);
+      console.log(`Stored selected shipping method: ${finalSelectedMethod.label}`);
+    }
+
+    // Calculate new order total
+    const newOrderTotal = itemTotal + selectedShippingCost;
+
+    const orderStructureResponse = {
+      id: id,
+      purchase_units: [{
+        reference_id: referenceId,
+        amount: {
+          currency_code: currencyCode,
+          value: newOrderTotal.toFixed(2),
+          breakdown: {
+            item_total: {
+              currency_code: currencyCode,
+              value: itemTotal.toFixed(2)
+            },
+            shipping: {
+              currency_code: currencyCode,
+              value: selectedShippingCost.toFixed(2)
+            }
+          }
+        },
+        shipping_options: selectedShippingOptions.map(opt => ({
+          id: opt.id,
+          amount: {
+            currency_code: currencyCode,
+            value: opt.amount.value
+          },
+          type: opt.type,
+          label: opt.label,
+          selected: !!opt.selected
+        }))
+      }]
+    };
+
+    res.status(200).json(orderStructureResponse);
+  } catch (error) {
+    console.error('Error in shipping callback:', error);
+    res.status(422).json({
+      name: 'INTERNAL_ERROR',
+      message: 'An error occurred processing your shipping request'
+    });
+  }
 });
 
 // **ENHANCED**: Modified capture endpoint to return actual selected shipping method
