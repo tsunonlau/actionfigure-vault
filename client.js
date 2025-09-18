@@ -763,7 +763,7 @@ function getDefaultShippingAddress() {
     return addresses[currentCountry] || addresses['HK'];
 }
 
-// Enhanced Order Success Function
+// **FIXED**: Enhanced Order Success Function to use actual PayPal data
 function showOrderSuccess(orderData) {
     const modal = document.getElementById('success-modal');
     const orderId = document.getElementById('order-id');
@@ -776,15 +776,38 @@ function showOrderSuccess(orderData) {
     const successShippingMethod = document.getElementById('success-shipping-method');
     const successDeliveryEstimate = document.getElementById('success-delivery-estimate');
 
-    // ENHANCED: Calculate breakdown for display
+    // Calculate totals for display
     const itemsTotal = calculateCartItemsTotal();
-    const shippingCost = calculateShippingCost();
-    const selectedMethod = getSelectedShippingMethod();
+    
+    // **FIXED**: Use actual shipping data from PayPal response instead of client calculation
+    let actualShippingCost = 0;
+    let actualShippingMethod = 'Standard Shipping';
+    let estimatedDays = '5-7 business days';
+
+    if (orderData.actualShippingDetails) {
+        actualShippingCost = orderData.actualShippingDetails.cost;
+        actualShippingMethod = orderData.actualShippingDetails.label;
+        
+        // Extract delivery estimate from shipping method label
+        const daysMatch = actualShippingMethod.match(/\(([^)]+)\)/);
+        if (daysMatch) {
+            estimatedDays = `${daysMatch[1]} business days`;
+        }
+    } else if (orderData.shippingMethod && orderData.shippingCost) {
+        actualShippingCost = parseFloat(orderData.shippingCost);
+        actualShippingMethod = orderData.shippingMethod;
+        
+        // Extract delivery estimate from shipping method
+        const daysMatch = actualShippingMethod.match(/\(([^)]+)\)/);
+        if (daysMatch) {
+            estimatedDays = `${daysMatch[1]} business days`;
+        }
+    }
 
     // Populate order details
     orderId.textContent = orderData.orderID || 'N/A';
     transactionId.textContent = orderData.transactionID || 'N/A';
-    amountPaid.textContent = orderData.amount || (itemsTotal + shippingCost).toFixed(2);
+    amountPaid.textContent = orderData.amount || (itemsTotal + actualShippingCost).toFixed(2);
     amountPaidCurrency.textContent = currentCurrency.symbol;
     paymentStatus.textContent = orderData.status || 'COMPLETED';
     shippingAddress.textContent = orderData.shippingAddress || 'N/A';
@@ -794,40 +817,42 @@ function showOrderSuccess(orderData) {
         const product = products.find(p => p.id === item.id);
         const convertedPrice = product ? getProductPrice(product) : item.price;
         return `
-            <div class="success-order-item">
+            <div class="success-item">
                 <span>${item.name} (${item.sku}) x ${item.quantity}</span>
                 <span>${formatPrice(convertedPrice * item.quantity, currentCurrency)}</span>
             </div>
         `;
     }).join('');
 
-    // ENHANCED: Add shipping cost breakdown in success modal
-    if (shippingCost > 0) {
+    // **FIXED**: Add shipping cost breakdown using actual PayPal data
+    if (actualShippingCost > 0) {
         successOrderItems.innerHTML += `
-            <div class="success-order-item" style="border-top: 1px solid #eee; padding-top: 0.5rem; margin-top: 0.5rem;">
-                <span>Shipping (${selectedMethod.name})</span>
-                <span>${formatPrice(shippingCost, currentCurrency)}</span>
+            <div class="success-item">
+                <span>Shipping (${actualShippingMethod})</span>
+                <span>${formatPrice(actualShippingCost, currentCurrency)}</span>
             </div>
-            <div class="success-order-item" style="font-weight: bold; font-size: 1.1rem;">
-                <span>Total Amount</span>
-                <span>${formatPrice(itemsTotal + shippingCost, currentCurrency)}</span>
+            <div class="success-item total">
+                <span><strong>Total Amount</strong></span>
+                <span><strong>${formatPrice(itemsTotal + actualShippingCost, currentCurrency)}</strong></span>
             </div>
         `;
     } else {
         successOrderItems.innerHTML += `
-            <div class="success-order-item" style="border-top: 1px solid #eee; padding-top: 0.5rem; margin-top: 0.5rem;">
-                <span>Shipping (${selectedMethod.name})</span>
-                <span style="color: #2ed573; font-weight: bold;">FREE</span>
+            <div class="success-item">
+                <span>Shipping (${actualShippingMethod})</span>
+                <span>FREE</span>
             </div>
         `;
     }
 
-    // Update shipping method based on selection
-    successShippingMethod.textContent = selectedMethod.name;
-    successDeliveryEstimate.textContent = `${selectedMethod.days} business days`;
+    // **FIXED**: Update shipping method and delivery estimate with actual data
+    successShippingMethod.textContent = actualShippingMethod;
+    successDeliveryEstimate.textContent = estimatedDays;
 
+    console.log(`✅ Success modal updated with actual shipping: ${actualShippingMethod} - ${actualShippingCost}`);
     modal.style.display = 'block';
 }
+
 
 function continueShopping() {
     closeModals();
