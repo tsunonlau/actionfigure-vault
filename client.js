@@ -262,7 +262,7 @@ const products = [
         basePrice: 295.50,
         sku: "HT-MV-TH-013",
         upc: "630509076545",
-        image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='250' viewBox='0 0 280 250'%3E%3Crect width='280' height='250' fill='%23dc2626'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-family='Arial' font-size='14' fill='white'%Ghost Digitial Good%3C/text%3E%3C/svg%3E",
+        image: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='250' viewBox='0 0 280 250'%3E%3Crect width='280' height='250' fill='%21130d'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-family='Arial' font-size='14' fill='white'%Ghost Digitial Good%3C/text%3E%3C/svg%3E",
         image_url: "https://cdn.actionfigurevault.com/products/ghost.jpg",
         url: "https://actionfigurevault.com/products/ghost",
         description: "A ghost (DIGITAL GOOD)",
