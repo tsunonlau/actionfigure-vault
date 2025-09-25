@@ -25,7 +25,7 @@ const CURRENCY_CONFIG = {
         name: 'Hong Kong Dollar',
         shipping: {
             free: true,
-            standard: { cost: 0, days: '3-5', type: 'FREE_STANDARD' },
+            standard: { cost: 9.99, days: '3-5', type: 'STANDARD' },
             express: { cost: 0, days: '1-2', type: 'FREE_EXPRESS' }
         }
     },
