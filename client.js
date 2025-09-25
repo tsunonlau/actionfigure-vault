@@ -16,7 +16,7 @@ const CURRENCY_CONFIG = {
         shipping: {
             free: true,
             standard: { cost: 0, days: '3-5' },
-            express: { cost: 0, days: '1-2' }
+            express: { cost: 9.99, days: '1-2' }
         }
     },
     'US': { 
