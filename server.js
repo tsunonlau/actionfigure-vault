@@ -504,7 +504,8 @@ app.post('/api/paypal/capture-order', async (req, res) => {
         const payer = captureData.payer;
         const shippingInfo = captureData.purchase_units[0].shipping;
         const shippingAddress = shippingInfo?.address;
-
+        // Add this line right after the PayPal capture:
+        console.log(`[${new Date().toISOString()}] 💳 PayPal Capture Response:\n`, JSON.stringify(captureData, null, 2));
         // **ENHANCED**: Use stored shipping method if available, otherwise fall back
         let shippingMethod, shippingCost;
         if (selectedShippingMethod) {
