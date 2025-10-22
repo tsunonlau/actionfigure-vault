@@ -722,6 +722,17 @@ function renderPayPalButtons() {
             console.error('PayPal Buttons Error:', err);
             hideLoading();
             showNotification('PayPal error occurred. Please try again.');
+            // NEW: Log client-side errors to your server for debugging
+            fetch(`${PAYPAL_CONFIG.SERVER_URL}/api/paypal/log-error`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    error: err.toString(),
+                    timestamp: new Date().toISOString(),
+                    context: 'PayPal Buttons onError (client-side)',
+                    userAgent: navigator.userAgent
+                })
+            });
         },
 
         onCancel: function(data) {

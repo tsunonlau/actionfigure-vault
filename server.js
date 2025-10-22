@@ -474,6 +474,14 @@ app.post('/api/paypal/shipping-callback', async (req, res) => {
   }
 });
 
+//Listener for client side onError during button creation
+app.post('/api/paypal/log-error', (req, res) => {
+    const { error, timestamp, context, userAgent } = req.body;
+    console.error(`[${timestamp}] ⚠️ PayPal Client Error (${context}): ${error}`);
+    console.log(`User Agent: ${userAgent}`);
+    res.sendStatus(200);
+});
+
 // **ENHANCED**: Modified capture endpoint to return actual selected shipping method
 app.post('/api/paypal/capture-order', async (req, res) => {
     try {
